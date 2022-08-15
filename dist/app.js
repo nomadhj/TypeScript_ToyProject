@@ -5,6 +5,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+let projectId = 1;
 var ProjectStatus;
 (function (ProjectStatus) {
     ProjectStatus[ProjectStatus["Active"] = 0] = "Active";
@@ -40,7 +41,7 @@ class ProjectState extends State {
         return this.instance;
     }
     addProject(title, description, numOfPeople) {
-        const newProject = new Project(Math.random().toString(), title, description, numOfPeople, ProjectStatus.Active);
+        const newProject = new Project(projectId++, title, description, numOfPeople, ProjectStatus.Active);
         this.projects.push(newProject);
         this.updateListners();
     }
@@ -111,21 +112,17 @@ class Component {
 }
 class ProjectItem extends Component {
     constructor(hostId, project) {
-        super("single-project", hostId, false, project.id);
+        super("single-project", hostId, false, project.id.toString());
         this.project = project;
         this.configure();
         this.renderContent();
     }
-    get persons() {
-        if (this.project.people === 1) {
-            return "1 person";
-        }
-        else {
-            return `${this.project.people} persons`;
-        }
-    }
     dragStartHandler(event) {
-        event.dataTransfer.setData("text/plain", this.project.id);
+        const pickedNode = event.target;
+        const pickedNodeIndex = [
+            ...event.target.parentNode.children,
+        ].indexOf(pickedNode);
+        event.dataTransfer.setData("text/plain", pickedNodeIndex.toString());
         event.dataTransfer.effectAllowed = "move";
     }
     dragEndHandler(_) { }
@@ -134,9 +131,7 @@ class ProjectItem extends Component {
         this.element.addEventListener("dragend", this.dragEndHandler);
     }
     renderContent() {
-        this.element.querySelector("h2").textContent = this.project.title;
-        this.element.querySelector("h3").textContent = this.persons + " assigned";
-        this.element.querySelector("p").textContent = this.project.description;
+        this.element.textContent = this.project.title;
     }
 }
 __decorate([
@@ -161,8 +156,18 @@ class ProjectList extends Component {
         }
     }
     dropHandler(event) {
-        const prjId = event.dataTransfer.getData("text/plain");
-        projectState.moveProject(prjId, this.type === "active" ? ProjectStatus.Active : ProjectStatus.Finished);
+        const pickedIndex = +event.dataTransfer.getData("text/plain");
+        const targetNode = event.target;
+        const targetNodeIndex = [
+            ...event.target.parentNode.children,
+        ].indexOf(targetNode);
+        console.log(event);
+        if (pickedIndex > targetNodeIndex) {
+            targetNode.before([...event.target.parentNode.children][pickedIndex]);
+        }
+        else {
+            targetNode.after([...event.target.parentNode.children][pickedIndex]);
+        }
     }
     dragLeaveHandler(_) {
         const listEl = this.element.querySelector("ul");
@@ -171,7 +176,7 @@ class ProjectList extends Component {
     configure() {
         this.element.addEventListener("dragover", this.dragOverHandler);
         this.element.addEventListener("dragleave", this.dragLeaveHandler);
-        this.element.addEventListener("drop", this.dropHandler);
+        this.element.addEventListener("drop", this.dropHandler, true);
         projectState.addListner((projects) => {
             const relevantProjects = projects.filter((prj) => {
                 if (this.type === "active") {
@@ -231,7 +236,7 @@ class ProjectInput extends Component {
         const descriptionValidatable = {
             value: enteredDescription,
             required: true,
-            minLength: 5,
+            minLength: 1,
         };
         const peopleValidatable = {
             value: +enteredPeople,

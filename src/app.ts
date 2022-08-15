@@ -1,3 +1,5 @@
+let projectId = 1;
+
 // 드래그 앤 드롭 인터페이스
 interface Draggable {
   dragStartHandler(event: DragEvent): void;
@@ -17,7 +19,7 @@ enum ProjectStatus {
 }
 class Project {
   constructor(
-    public id: string,
+    public id: number,
     public title: string,
     public description: string,
     public people: number,
@@ -56,7 +58,7 @@ class ProjectState extends State<Project> {
 
   addProject(title: string, description: string, numOfPeople: number) {
     const newProject = new Project(
-      Math.random().toString(),
+      projectId++,
       title,
       description,
       numOfPeople,
@@ -66,7 +68,7 @@ class ProjectState extends State<Project> {
     this.updateListners();
   }
 
-  moveProject(projectId: string, newStatus: ProjectStatus) {
+  moveProject(projectId: number, newStatus: ProjectStatus) {
     const project = this.projects.find((prj) => prj.id === projectId);
     if (project && project.status !== newStatus) {
       project.status = newStatus;
@@ -187,16 +189,16 @@ class ProjectItem
 {
   private project: Project;
 
-  get persons() {
-    if (this.project.people === 1) {
-      return "1 person";
-    } else {
-      return `${this.project.people} persons`;
-    }
-  }
+  // get persons() {
+  //   if (this.project.people === 1) {
+  //     return "1 person";
+  //   } else {
+  //     return `${this.project.people} persons`;
+  //   }
+  // }
 
   constructor(hostId: string, project: Project) {
-    super("single-project", hostId, false, project.id);
+    super("single-project", hostId, false, project.id.toString());
     this.project = project;
 
     this.configure();
@@ -205,8 +207,16 @@ class ProjectItem
 
   @autobind
   dragStartHandler(event: DragEvent) {
-    event.dataTransfer!.setData("text/plain", this.project.id);
+    const pickedNode = event.target;
+    const pickedNodeIndex = [
+      ...(<HTMLElement>(<HTMLElement>event.target).parentNode).children,
+    ].indexOf(pickedNode as HTMLElement);
+    event.dataTransfer!.setData("text/plain", pickedNodeIndex.toString());
+    // event.dataTransfer!.setData("text/plain", this.project.id.toString());
     event.dataTransfer!.effectAllowed = "move"; // copymove가 아닌 move 사용
+    // console.log([
+    //   ...(<HTMLElement>(<HTMLElement>event.target).parentNode).children,
+    // ]);
   }
 
   @autobind
@@ -218,9 +228,10 @@ class ProjectItem
   }
 
   renderContent() {
-    this.element.querySelector("h2")!.textContent = this.project.title;
-    this.element.querySelector("h3")!.textContent = this.persons + " assigned";
-    this.element.querySelector("p")!.textContent = this.project.description;
+    this.element.textContent = this.project.title;
+    // this.element.querySelector("h2")!.textContent = this.project.title;
+    // this.element.querySelector("h3")!.textContent = this.persons + " assigned";
+    // this.element.querySelector("p")!.textContent = this.project.description;
   }
 }
 
@@ -242,7 +253,7 @@ class ProjectList
   @autobind
   dragOverHandler(event: DragEvent) {
     if (event.dataTransfer && event.dataTransfer.types[0] === "text/plain") {
-      event.preventDefault(); // ????
+      event.preventDefault(); // 기본적으로 drop을 막으므로 해제
       const listEl = this.element.querySelector("ul")!;
       listEl.classList.add("droppable");
     }
@@ -250,11 +261,33 @@ class ProjectList
 
   @autobind
   dropHandler(event: DragEvent) {
-    const prjId = event.dataTransfer!.getData("text/plain");
-    projectState.moveProject(
-      prjId,
-      this.type === "active" ? ProjectStatus.Active : ProjectStatus.Finished
-    );
+    // const prjId = +event.dataTransfer!.getData("text/plain");
+    // projectState.moveProject(
+    //   prjId,
+    //   this.type === "active" ? ProjectStatus.Active : ProjectStatus.Finished
+    // );
+
+    // 코드 정리 (변수 더 깔끔하게 정리 할 것)
+
+    const pickedIndex = +event.dataTransfer!.getData("text/plain");
+    const targetNode = event.target;
+    const targetNodeIndex = [
+      ...(<HTMLElement>(<HTMLElement>event.target).parentNode).children,
+    ].indexOf(targetNode as HTMLElement);
+    console.log(event);
+    if (pickedIndex > targetNodeIndex) {
+      (targetNode as HTMLElement).before(
+        [...(<HTMLElement>(<HTMLElement>event.target).parentNode).children][
+          pickedIndex
+        ]
+      );
+    } else {
+      (targetNode as HTMLElement).after(
+        [...(<HTMLElement>(<HTMLElement>event.target).parentNode).children][
+          pickedIndex
+        ]
+      );
+    }
   }
 
   @autobind
@@ -266,7 +299,7 @@ class ProjectList
   configure() {
     this.element.addEventListener("dragover", this.dragOverHandler);
     this.element.addEventListener("dragleave", this.dragLeaveHandler);
-    this.element.addEventListener("drop", this.dropHandler);
+    this.element.addEventListener("drop", this.dropHandler, true);
     projectState.addListner((projects: Project[]) => {
       const relevantProjects = projects.filter((prj) => {
         if (this.type === "active") {
@@ -337,7 +370,7 @@ class ProjectInput extends Component<HTMLDivElement, HTMLFormElement> {
     const descriptionValidatable: Validatable = {
       value: enteredDescription,
       required: true,
-      minLength: 5,
+      minLength: 1,
     };
     const peopleValidatable: Validatable = {
       value: +enteredPeople,
