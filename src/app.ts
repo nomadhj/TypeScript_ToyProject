@@ -410,6 +410,8 @@ class ProjectList
 class ProjectAdd extends Component<HTMLDivElement, HTMLDivElement> {
   constructor() {
     super("project-add", "app", true, "user-project");
+
+    this.configure();
   }
 
   configure() {

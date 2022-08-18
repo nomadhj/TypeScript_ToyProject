@@ -209,6 +209,7 @@ __decorate([
 class ProjectAdd extends Component {
     constructor() {
         super("project-add", "app", true, "user-project");
+        this.configure();
     }
     configure() {
         this.element.addEventListener("click", this.clickHandler.bind(this));
