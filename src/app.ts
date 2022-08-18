@@ -20,14 +20,12 @@ enum ProjectStatus {
 class Project {
   constructor(
     public id: number,
-    public title: string,
-    public description: string,
-    public people: number,
+    // public title: string,
+    // public description: string,
+    // public people: number,
     public status: ProjectStatus
   ) {}
 }
-
-// 프로젝트 관리를 위한 클래스 (싱글톤 패턴; 단 하나의 인스턴스만을 생성하는 클래스)
 
 type Listener<T> = (items: T[]) => void;
 
@@ -40,6 +38,7 @@ class State<T> {
   }
 }
 
+// 프로젝트 관리를 위한 클래스 (싱글톤 패턴; 단 하나의 인스턴스만을 생성하는 클래스)
 class ProjectState extends State<Project> {
   private projects: Project[] = [];
   private static instance: ProjectState;
@@ -56,12 +55,24 @@ class ProjectState extends State<Project> {
     return this.instance;
   }
 
-  addProject(title: string, description: string, numOfPeople: number) {
+  // addProject(title: string, description: string, numOfPeople: number) {
+  //   const newProject = new Project(
+  //     projectId++,
+  //     title,
+  //     description,
+  //     numOfPeople,
+  //     ProjectStatus.Active
+  //   );
+  //   this.projects.push(newProject);
+  //   this.updateListners();
+  // }
+
+  addProject() {
     const newProject = new Project(
       projectId++,
-      title,
-      description,
-      numOfPeople,
+      // title,
+      // description,
+      // numOfPeople,
       ProjectStatus.Active
     );
     this.projects.push(newProject);
@@ -207,16 +218,13 @@ class ProjectItem
 
   @autobind
   dragStartHandler(event: DragEvent) {
-    const pickedNode = event.target;
-    const pickedNodeIndex = [
-      ...(<HTMLElement>(<HTMLElement>event.target).parentNode).children,
-    ].indexOf(pickedNode as HTMLElement);
-    event.dataTransfer!.setData("text/plain", pickedNodeIndex.toString());
+    const pickedNode = event.target as HTMLElement;
+    const pickedNodeList = [...pickedNode.parentNode!.children];
+    const pickedNodeIndex = pickedNodeList.indexOf(pickedNode);
+
     // event.dataTransfer!.setData("text/plain", this.project.id.toString());
+    event.dataTransfer!.setData("text/plain", pickedNodeIndex.toString());
     event.dataTransfer!.effectAllowed = "move"; // copymove가 아닌 move 사용
-    // console.log([
-    //   ...(<HTMLElement>(<HTMLElement>event.target).parentNode).children,
-    // ]);
   }
 
   @autobind
@@ -228,7 +236,7 @@ class ProjectItem
   }
 
   renderContent() {
-    this.element.textContent = this.project.title;
+    // this.element.textContent = this.project.title;
     // this.element.querySelector("h2")!.textContent = this.project.title;
     // this.element.querySelector("h3")!.textContent = this.persons + " assigned";
     // this.element.querySelector("p")!.textContent = this.project.description;
@@ -267,26 +275,15 @@ class ProjectList
     //   this.type === "active" ? ProjectStatus.Active : ProjectStatus.Finished
     // );
 
-    // 코드 정리 (변수 더 깔끔하게 정리 할 것)
+    const pickedNodeIndex = +event.dataTransfer!.getData("text/plain");
+    const targetNode = event.target as HTMLElement; // 드롭위치의 노드
+    const targetNodeList = [...targetNode.parentNode!.children];
+    const targetNodeIndex = targetNodeList.indexOf(targetNode);
 
-    const pickedIndex = +event.dataTransfer!.getData("text/plain");
-    const targetNode = event.target;
-    const targetNodeIndex = [
-      ...(<HTMLElement>(<HTMLElement>event.target).parentNode).children,
-    ].indexOf(targetNode as HTMLElement);
-    console.log(event);
-    if (pickedIndex > targetNodeIndex) {
-      (targetNode as HTMLElement).before(
-        [...(<HTMLElement>(<HTMLElement>event.target).parentNode).children][
-          pickedIndex
-        ]
-      );
+    if (pickedNodeIndex > targetNodeIndex) {
+      targetNode.before(targetNodeList[pickedNodeIndex]);
     } else {
-      (targetNode as HTMLElement).after(
-        [...(<HTMLElement>(<HTMLElement>event.target).parentNode).children][
-          pickedIndex
-        ]
-      );
+      targetNode.after(targetNodeList[pickedNodeIndex]);
     }
   }
 
@@ -332,87 +329,102 @@ class ProjectList
 }
 
 // 입력값을 다루는 클래스
-class ProjectInput extends Component<HTMLDivElement, HTMLFormElement> {
-  titleInputElement: HTMLInputElement;
-  descriptionInputElement: HTMLTextAreaElement;
-  peopleInputElement: HTMLInputElement;
+// class ProjectInput extends Component<HTMLDivElement, HTMLFormElement> {
+//   titleInputElement: HTMLInputElement;
+//   descriptionInputElement: HTMLTextAreaElement;
+//   peopleInputElement: HTMLInputElement;
 
+//   constructor() {
+//     super("project-input", "app", true, "user-input");
+//     this.titleInputElement = this.element.querySelector(
+//       "#title"
+//     ) as HTMLInputElement;
+//     this.descriptionInputElement = this.element.querySelector(
+//       "#description"
+//     ) as HTMLTextAreaElement;
+//     this.peopleInputElement = this.element.querySelector(
+//       "#people"
+//     ) as HTMLInputElement;
+
+//     this.configure();
+//   }
+
+//   configure() {
+//     this.element.addEventListener("submit", this.submitHandler);
+//   }
+
+//   renderContent() {}
+
+//   private gatherUserInput(): [string, string, number] | void {
+//     const enteredTitle = this.titleInputElement.value;
+//     const enteredDescription = this.descriptionInputElement.value;
+//     const enteredPeople = this.peopleInputElement.value;
+
+//     const titleValidatable: Validatable = {
+//       value: enteredTitle,
+//       required: true,
+//     };
+//     const descriptionValidatable: Validatable = {
+//       value: enteredDescription,
+//       required: true,
+//       minLength: 1,
+//     };
+//     const peopleValidatable: Validatable = {
+//       value: +enteredPeople,
+//       required: true,
+//       min: 1,
+//     };
+
+//     if (
+//       !validate(titleValidatable) ||
+//       !validate(descriptionValidatable) ||
+//       !validate(peopleValidatable)
+//     ) {
+//       alert("Invalid Input, Please try agian!!");
+//       return;
+//     } else {
+//       return [enteredTitle, enteredDescription, +enteredPeople];
+//     }
+//   }
+
+//   private clearInputs() {
+//     this.titleInputElement.value = "";
+//     this.descriptionInputElement.value = "";
+//     this.peopleInputElement.value = "";
+//   }
+
+//   @autobind
+//   private submitHandler(event: Event) {
+//     event.preventDefault();
+//     const userInput = this.gatherUserInput();
+//     if (Array.isArray(userInput)) {
+//       const [title, desc, people] = userInput;
+//       projectState.addProject(title, desc, people);
+//       this.clearInputs();
+//     }
+//   }
+// }
+
+// 프로젝트 추가 클래스
+
+class ProjectAdd extends Component<HTMLDivElement, HTMLDivElement> {
   constructor() {
-    super("project-input", "app", true, "user-input");
-    this.titleInputElement = this.element.querySelector(
-      "#title"
-    ) as HTMLInputElement;
-    this.descriptionInputElement = this.element.querySelector(
-      "#description"
-    ) as HTMLTextAreaElement;
-    this.peopleInputElement = this.element.querySelector(
-      "#people"
-    ) as HTMLInputElement;
-
-    this.configure();
+    super("project-add", "app", true, "user-project");
   }
 
   configure() {
-    this.element.addEventListener("submit", this.submitHandler);
+    this.element.addEventListener("click", this.clickHandler.bind(this));
   }
 
   renderContent() {}
 
-  private gatherUserInput(): [string, string, number] | void {
-    const enteredTitle = this.titleInputElement.value;
-    const enteredDescription = this.descriptionInputElement.value;
-    const enteredPeople = this.peopleInputElement.value;
-
-    const titleValidatable: Validatable = {
-      value: enteredTitle,
-      required: true,
-    };
-    const descriptionValidatable: Validatable = {
-      value: enteredDescription,
-      required: true,
-      minLength: 1,
-    };
-    const peopleValidatable: Validatable = {
-      value: +enteredPeople,
-      required: true,
-      min: 1,
-    };
-
-    if (
-      !validate(titleValidatable) ||
-      !validate(descriptionValidatable) ||
-      !validate(peopleValidatable)
-    ) {
-      alert("Invalid Input, Please try agian!!");
-      return;
-    } else {
-      return [enteredTitle, enteredDescription, +enteredPeople];
-    }
+  private clickHandler() {
+    console.log("hello");
+    projectState.addProject();
   }
-
-  private clearInputs() {
-    this.titleInputElement.value = "";
-    this.descriptionInputElement.value = "";
-    this.peopleInputElement.value = "";
-  }
-
-  @autobind
-  private submitHandler(event: Event) {
-    event.preventDefault();
-    const userInput = this.gatherUserInput();
-    if (Array.isArray(userInput)) {
-      const [title, desc, people] = userInput;
-      projectState.addProject(title, desc, people);
-      this.clearInputs();
-    }
-  }
-
-  // 데코레이터 미사용 (bind 적용)
-  // private configure() {
-  //   this.element.addEventListener("submit", this.submitHandler.bind(this));
-  // }
 }
 
-const prjInput = new ProjectInput();
+const userPrj = new ProjectAdd();
+// const prjInput = new ProjectInput();
 const activePrjList = new ProjectList("active");
-const finishedPrjList = new ProjectList("finished");
+// const finishedPrjList = new ProjectList("finished");
