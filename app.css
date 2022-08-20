@@ -1,128 +1,125 @@
-* {
-  box-sizing: border-box;
+#app {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  height: 100vh;
+  padding: 50px 10px;
+  background-color: #0c131d;
+  overflow-x: scroll;
+  white-space: nowrap;
 }
 
-html {
-  font-family: sans-serif;
-}
-
-body {
-  margin: 0;
-}
-
-label,
-input,
-textarea {
-  display: block;
-  margin: 0.5rem 0;
-}
-
-label {
-  font-weight: bold;
-}
-
-input,
-textarea {
-  font: inherit;
-  padding: 0.2rem 0.4rem;
-  width: 100%;
-  max-width: 30rem;
-  border: 1px solid #ccc;
-}
-
-input:focus,
-textarea:focus {
-  outline: none;
-  background: #fff5f9;
-}
-
-button {
-  font: inherit;
-  background: #ff0062;
-  border: 1px solid #ff0062;
-  cursor: pointer;
-  color: white;
-  padding: 0.75rem 1rem;
-}
-
-button:focus {
-  outline: none;
-}
-
-button:hover,
-button:active {
-  background: #a80041;
-  border-color: #a80041;
+#project-wrapper{
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
 }
 
 .projects {
-  margin: 1rem;
-  border: 1px solid #ff0062;
+  min-width: 270px;
+  margin: 5px;
+  background-color: #ebecf0;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
 }
 
-.projects header {
-  background: #ff0062;
-  height: 3.5rem;
+.projects.droppable{
+  background-color: rgba(235, 236, 240, 0.5);
+}
+
+.projectHeader {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
+  height: 40px;
+  padding: 8px;
+  color: #182a4d;
 }
 
-#finished-projects {
-  border-color: #0044ff;
+.projectHeader button {
+  border: none;
+  cursor: pointer;
 }
 
-#finished-projects header {
-  background: #0044ff;
+.projectItem {
+  height: 56px;
+  margin: 8px 8px 0;
+  padding: 0 8px;
+  border-radius: 5px;
+  line-height: 56px;
 }
 
-.projects h2 {
-  margin: 0;
+.projectItem.droppable{
+  opacity: 0.5;
+}
+
+.addItems {
+  padding: 8px;
+}
+
+.addItems p {
+  cursor: pointer;
+}
+
+.addItems input {
+  height: 36px;
+  margin-top: 8px;
+  border: 4px solid rgba(3, 105, 167, 0.8);
+  border-radius: 3px;
+}
+
+.addItems input:focus {
+  outline: none;
+}
+
+.addItems button {
+  height: 36px;
+  background-color: rgba(3, 105, 167, 0.8);
+  border: none;
+  border-radius: 3px;
   color: white;
+  font-weight: bold;
+  cursor: pointer;
 }
 
-.projects ul {
-  list-style: none;
-  margin: 0;
-  padding: 1rem;
+.addItems button:hover {
+  background-color: rgba(3, 105, 167, 1);
 }
 
-.projects li {
-  box-shadow: 1px 1px 8px rgba(0, 0, 0, 0.26);
-  padding: 1rem;
-  margin: 1rem;
-  background-color: white;
+
+.addProjects {
+  min-width: 270px;
+  margin: 5px;
+  padding: 8px;
+  background-color: rgba(90, 94, 100, 0.5);
+  color: white;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
 }
 
-.projects li h2 {
-  color: #ff0062;
-  margin: 0.5rem 0;
+.addProjects input {
+  height: 36px;
+  margin-top: 8px;
+  border: 4px solid rgba(3, 105, 167, 0.8);
+  border-radius: 3px;
 }
 
-#finished-projects li h2 {
-  color: #0044ff;
+.addProjects input:focus {
+  outline: none;
 }
 
-.projects li h3 {
-  color: #575757;
-  font-size: 1rem;
+.addProjects button {
+  height: 36px;
+  background-color: rgba(3, 105, 167, 0.8);
+  border: none;
+  border-radius: 3px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
 }
 
-.project li p {
-  margin: 0;
-}
-
-.droppable {
-  background: #ffe3ee;
-}
-
-#finished-projects .droppable {
-  background: #d6e1ff;
-}
-
-#user-input {
-  margin: 1rem;
-  padding: 1rem;
-  border: 1px solid #ff0062;
-  background: #f7f7f7;
+.addProjects button:hover {
+  background-color: rgba(3, 105, 167, 1);
 }
