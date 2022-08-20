@@ -1,52 +1,40 @@
-<!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TypeScript ToyProject</title>
+    <title>ToyProject - Trello Motive</title>
+    <link rel="stylesheet" href="reset.css" />
     <link rel="stylesheet" href="app.css" />
     <script src="dist/app.js" defer></script>
   </head>
   <body>
-    <!-- 프로젝트 추가 -->
     <template id="project-add">
-      <div class="project-add__wrapper">
-        <p>+ Add another list</p>
-      </div>
-    </template>
-    <template id="project-input">
-      <form>
-        <div class="form-control">
-          <label for="title">Title</label>
-          <input type="text" id="title" />
-        </div>
-        <div class="form-control">
-          <label for="description">Description</label>
-          <textarea id="description" rows="3"></textarea>
-        </div>
-        <div class="form-control">
-          <label for="people">People</label>
-          <input type="number" id="people" step="1" min="0" max="10" />
-        </div>
-        <button type="submit">ADD PROJECT</button>
+      <form class="addProjects">
+        <p>Add another list</p>
+        <input type="text" id="projectTitle" />
+        <button type="submit">Add list</button>
       </form>
     </template>
-    <template id="single-project">
-      <li draggable="true">
-        <!-- <h2></h2>
-        <h3></h3>
-        <p></p> -->
-      </li>
-    </template>
     <template id="project-list">
-      <section class="projects">
-        <header>
+      <section class="projects" draggable="true">
+        <header class="projectHeader">
           <h2></h2>
+          <button>X</button>
         </header>
         <ul></ul>
+        <form class="addItems">
+          <p>ADD a card</p>
+          <input type="text" />
+          <button type="submit">Add</button>
+        </form>
       </section>
     </template>
-    <div id="app"></div>
+    <template id="project-item">
+      <li class="projectItem" draggable="true"></li>
+    </template>
+    <div id="app">
+      <div id="project-wrapper"></div>
+    </div>
   </body>
 </html>
