@@ -18,12 +18,12 @@ class Component {
 }
 class ProjectItem extends Component {
     constructor(hostId, content, listId) {
-        super("project-item", hostId, "beforeend");
+        super("projectItem", hostId, "beforeend");
         this.hostId = hostId;
         this.content = content;
         this.listId = listId;
-        this.element.textContent = this.content;
-        this.element.className += ` ${this.listId}`;
+        this.element.innerHTML = `${this.content} <button>X</button>`;
+        this.element.id = Math.random().toFixed(3).toString();
         this.element.dataset.category = `${this.listId}`;
         this.element.style.backgroundColor = this.randomColor();
         this.configure();
@@ -31,14 +31,22 @@ class ProjectItem extends Component {
     dragStartHandler(event) {
         event.stopPropagation();
         currentDragItem = "item";
-        const pickedNode = event.target;
+        const pickedNode = this.element;
         const pickedNodeList = [...pickedNode.parentNode.children];
         const pickedNodeIndex = pickedNodeList.indexOf(pickedNode);
-        event.dataTransfer.setData("text/plain", `item,${pickedNode.dataset.category},${pickedNodeIndex}`);
+        event.dataTransfer.setData("text/plain", `item,${pickedNode.dataset.category},${pickedNodeIndex},${pickedNode.id}`);
         event.dataTransfer.effectAllowed = "move";
     }
     dragEndHandler(_) { }
+    closeHandler(event) {
+        const closeBtnNode = event.target;
+        const targetNode = closeBtnNode.parentNode;
+        const itemWrapper = targetNode.parentNode;
+        itemWrapper.removeChild(targetNode);
+    }
     configure() {
+        const closeBtnElement = this.element.querySelector("button");
+        closeBtnElement.addEventListener("click", this.closeHandler.bind(this));
         this.element.addEventListener("dragstart", this.dragStartHandler.bind(this));
         this.element.addEventListener("dragend", this.dragEndHandler.bind(this));
     }
@@ -70,7 +78,7 @@ class ProjectItem extends Component {
 }
 class ProjectList extends Component {
     constructor(id, title) {
-        super("project-list", "project-wrapper", "beforeend", `project${id}`);
+        super("projectList", "project-wrapper", "beforeend", `project${id}`);
         this.id = id;
         this.title = title;
         this.element.id = `project${id}`;
@@ -81,10 +89,10 @@ class ProjectList extends Component {
     }
     dragStartHandler(event) {
         currentDragItem = "projectList";
-        const pickedNode = event.target;
+        const pickedNode = this.element;
         const pickedNodeList = [...pickedNode.parentNode.children];
         const pickedNodeIndex = pickedNodeList.indexOf(pickedNode);
-        event.dataTransfer.setData("text/plain", `projectList,${pickedNodeIndex}`);
+        event.dataTransfer.setData("text/plain", `projectList,${pickedNodeIndex},${pickedNode.id}`);
         event.dataTransfer.effectAllowed = "move";
     }
     dragEndHandler(_) { }
@@ -101,38 +109,13 @@ class ProjectList extends Component {
         }
     }
     dropHandler(event) {
-        const pickedDataList = event.dataTransfer.getData("text/plain").split(",");
+        const dataList = event.dataTransfer.getData("text/plain").split(",");
         let targetNode = event.target;
-        if (pickedDataList[0] === "item" && targetNode.tagName === "LI") {
-            const [_, category, pickedNodeIndex] = pickedDataList;
-            if (category === targetNode.dataset.category) {
-                const targetNodeList = [...targetNode.parentNode.children];
-                const targetNodeIndex = targetNodeList.indexOf(targetNode);
-                if (+pickedNodeIndex > targetNodeIndex) {
-                    targetNode.before(targetNodeList[+pickedNodeIndex]);
-                }
-                else {
-                    targetNode.after(targetNodeList[+pickedNodeIndex]);
-                }
-            }
-            else {
-            }
-            this.dragLeaveHandler(event);
+        if (dataList[0] === "item" && targetNode.tagName === "LI") {
+            this.compareItem(event, targetNode, dataList);
         }
-        else if (pickedDataList[0] === "projectList") {
-            const [_, pickedNodeIndex] = pickedDataList;
-            while (targetNode.tagName !== "SECTION") {
-                targetNode = targetNode.parentNode;
-            }
-            const targetNodeList = [...targetNode.parentNode.children];
-            const targetNodeIndex = targetNodeList.indexOf(targetNode);
-            if (+pickedNodeIndex > targetNodeIndex) {
-                targetNode.before(targetNodeList[+pickedNodeIndex]);
-            }
-            else {
-                targetNode.after(targetNodeList[+pickedNodeIndex]);
-            }
-            this.dragLeaveHandler(event);
+        else if (dataList[0] === "projectList") {
+            this.compareProject(event, targetNode, dataList);
         }
     }
     dragLeaveHandler(event) {
@@ -143,6 +126,42 @@ class ProjectList extends Component {
         else if (currentDragItem === "projectList") {
             this.element.classList.remove("droppable");
         }
+    }
+    compareItem(event, node, dataList) {
+        const [_, category, pickedNodeIndex, pickedNodeId] = dataList;
+        const pickedNode = document.getElementById(pickedNodeId);
+        if (category === node.dataset.category) {
+            const nodeList = [...node.parentNode.children];
+            const nodeIndex = nodeList.indexOf(node);
+            if (+pickedNodeIndex > nodeIndex)
+                node.before(pickedNode);
+            else
+                node.after(pickedNode);
+        }
+        else {
+            const dropY = event.offsetY;
+            const height = node.clientHeight;
+            if (dropY <= height / 2)
+                node.before(pickedNode);
+            else
+                node.after(pickedNode);
+            pickedNode.dataset.category = node.dataset.category;
+        }
+        this.dragLeaveHandler(event);
+    }
+    compareProject(event, node, dataList) {
+        const [_, pickedNodeIndex, pickedNodeId] = dataList;
+        const pickedNode = document.getElementById(pickedNodeId);
+        while (node.tagName !== "SECTION") {
+            node = node.parentNode;
+        }
+        const nodeList = [...node.parentNode.children];
+        const nodeIndex = nodeList.indexOf(node);
+        if (+pickedNodeIndex > nodeIndex)
+            node.before(pickedNode);
+        else
+            node.after(pickedNode);
+        this.dragLeaveHandler(event);
     }
     closeHandler(event) {
         const closeBtnNode = event.target;
@@ -179,7 +198,7 @@ class ProjectList extends Component {
 }
 class ProjectAdd extends Component {
     constructor() {
-        super("project-add", "app", "beforeend", "user-input");
+        super("projectAdd", "app", "beforeend", "userInput");
         this.InputElement = this.element.querySelector("#projectTitle");
         this.configure();
     }

@@ -62,9 +62,9 @@ class ProjectItem
     private content: string,
     private listId: number
   ) {
-    super("project-item", hostId, "beforeend");
-    this.element.textContent = this.content;
-    this.element.className += ` ${this.listId}`;
+    super("projectItem", hostId, "beforeend");
+    this.element.innerHTML = `${this.content} <button>X</button>`;
+    this.element.id = Math.random().toFixed(3).toString();
     this.element.dataset.category = `${this.listId}`;
     this.element.style.backgroundColor = this.randomColor();
 
@@ -74,20 +74,28 @@ class ProjectItem
   dragStartHandler(event: DragEvent) {
     event.stopPropagation();
     currentDragItem = "item";
-    const pickedNode = event.target as HTMLLIElement;
+    const pickedNode = this.element;
     const pickedNodeList = [...pickedNode.parentNode!.children];
     const pickedNodeIndex = pickedNodeList.indexOf(pickedNode);
-
     event.dataTransfer!.setData(
       "text/plain",
-      `item,${pickedNode.dataset.category},${pickedNodeIndex}`
+      `item,${pickedNode.dataset.category},${pickedNodeIndex},${pickedNode.id}`
     );
     event.dataTransfer!.effectAllowed = "move";
   }
 
   dragEndHandler(_: DragEvent) {}
 
+  private closeHandler(event: Event) {
+    const closeBtnNode = event.target as HTMLButtonElement;
+    const targetNode = closeBtnNode.parentNode as HTMLLIElement;
+    const itemWrapper = targetNode.parentNode as HTMLUListElement;
+    itemWrapper.removeChild(targetNode);
+  }
+
   configure() {
+    const closeBtnElement = this.element.querySelector("button");
+    closeBtnElement!.addEventListener("click", this.closeHandler.bind(this));
     this.element.addEventListener(
       "dragstart",
       this.dragStartHandler.bind(this)
@@ -130,7 +138,7 @@ class ProjectList
   InputElement: HTMLInputElement;
 
   constructor(private id: number, private title: string) {
-    super("project-list", "project-wrapper", "beforeend", `project${id}`);
+    super("projectList", "project-wrapper", "beforeend", `project${id}`);
     this.element.id = `project${id}`;
     this.element.querySelector("h2")!.textContent = this.title;
     this.element.querySelector("ul")!.id = `itemList${id}`;
@@ -141,17 +149,19 @@ class ProjectList
 
   dragStartHandler(event: DragEvent) {
     currentDragItem = "projectList";
-    const pickedNode = event.target as HTMLElement;
+    const pickedNode = this.element;
     const pickedNodeList = [...pickedNode.parentNode!.children];
     const pickedNodeIndex = pickedNodeList.indexOf(pickedNode);
-    event.dataTransfer!.setData("text/plain", `projectList,${pickedNodeIndex}`);
+    event.dataTransfer!.setData(
+      "text/plain",
+      `projectList,${pickedNodeIndex},${pickedNode.id}`
+    );
     event.dataTransfer!.effectAllowed = "move";
   }
 
   dragEndHandler(_: DragEvent) {}
 
   // Todo: 쓰로틀링이나 디바운싱 적용 가능한지 검토
-  // Todo: 전역변수 없이 구현 가능한지 검토
   dragOverHandler(event: DragEvent) {
     if (event.dataTransfer && event.dataTransfer.types[0] === "text/plain") {
       event.preventDefault();
@@ -165,43 +175,14 @@ class ProjectList
     }
   }
 
-  // Todo: 함수 코드 가독성 개선 필요
   dropHandler(event: DragEvent) {
-    const pickedDataList = event.dataTransfer!.getData("text/plain").split(",");
+    const dataList = event.dataTransfer!.getData("text/plain").split(",");
     let targetNode = event.target as HTMLElement;
 
-    if (pickedDataList[0] === "item" && targetNode.tagName === "LI") {
-      const [_, category, pickedNodeIndex] = pickedDataList;
-
-      if (category === targetNode.dataset.category) {
-        const targetNodeList = [...targetNode.parentNode!.children];
-        const targetNodeIndex = targetNodeList.indexOf(targetNode);
-
-        if (+pickedNodeIndex > targetNodeIndex) {
-          targetNode.before(targetNodeList[+pickedNodeIndex]);
-        } else {
-          targetNode.after(targetNodeList[+pickedNodeIndex]);
-        }
-      } else {
-        // Todo: 서로 다른 프로젝트 상 아이템 이동 로직 추가
-      }
-      this.dragLeaveHandler(event);
-    } else if (pickedDataList[0] === "projectList") {
-      const [_, pickedNodeIndex] = pickedDataList;
-
-      while (targetNode.tagName !== "SECTION") {
-        targetNode = targetNode.parentNode as HTMLElement;
-      }
-
-      const targetNodeList = [...targetNode.parentNode!.children];
-      const targetNodeIndex = targetNodeList.indexOf(targetNode);
-
-      if (+pickedNodeIndex > targetNodeIndex) {
-        targetNode.before(targetNodeList[+pickedNodeIndex]);
-      } else {
-        targetNode.after(targetNodeList[+pickedNodeIndex]);
-      }
-      this.dragLeaveHandler(event);
+    if (dataList[0] === "item" && targetNode.tagName === "LI") {
+      this.compareItem(event, targetNode, dataList);
+    } else if (dataList[0] === "projectList") {
+      this.compareProject(event, targetNode, dataList);
     }
   }
 
@@ -213,6 +194,49 @@ class ProjectList
     } else if (currentDragItem === "projectList") {
       this.element.classList.remove("droppable");
     }
+  }
+
+  private compareItem(event: DragEvent, node: HTMLElement, dataList: string[]) {
+    const [_, category, pickedNodeIndex, pickedNodeId] = dataList;
+    const pickedNode = document.getElementById(pickedNodeId)!;
+
+    if (category === node.dataset.category) {
+      const nodeList = [...node.parentNode!.children];
+      const nodeIndex = nodeList.indexOf(node);
+
+      if (+pickedNodeIndex > nodeIndex) node.before(pickedNode);
+      else node.after(pickedNode);
+    } else {
+      const dropY = event.offsetY;
+      const height = node.clientHeight;
+
+      if (dropY <= height / 2) node.before(pickedNode);
+      else node.after(pickedNode);
+
+      pickedNode.dataset.category = node.dataset.category;
+    }
+    this.dragLeaveHandler(event);
+  }
+
+  private compareProject(
+    event: DragEvent,
+    node: HTMLElement,
+    dataList: string[]
+  ) {
+    const [_, pickedNodeIndex, pickedNodeId] = dataList;
+    const pickedNode = document.getElementById(pickedNodeId)!;
+
+    while (node.tagName !== "SECTION") {
+      node = node.parentNode as HTMLElement;
+    }
+
+    const nodeList = [...node.parentNode!.children];
+    const nodeIndex = nodeList.indexOf(node);
+
+    if (+pickedNodeIndex > nodeIndex) node.before(pickedNode);
+    else node.after(pickedNode);
+
+    this.dragLeaveHandler(event);
   }
 
   private closeHandler(event: Event) {
@@ -268,7 +292,7 @@ class ProjectAdd extends Component<HTMLDivElement, HTMLFormElement> {
   InputElement: HTMLInputElement;
 
   constructor() {
-    super("project-add", "app", "beforeend", "user-input");
+    super("projectAdd", "app", "beforeend", "userInput");
     this.InputElement = this.element.querySelector(
       "#projectTitle"
     ) as HTMLInputElement;
