@@ -39,19 +39,32 @@
 
 .projectHeader button {
   border: none;
+  font-weight: bold;
   cursor: pointer;
 }
 
 .projectItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   height: 56px;
-  margin: 8px 8px 0;
+  margin: 4px 8px;
   padding: 0 8px;
   border-radius: 5px;
+  color: #0c131d;
   line-height: 56px;
 }
 
 .projectItem.droppable{
   opacity: 0.5;
+}
+
+.projectItem button {
+  border: none;
+  background: transparent;
+  color: #0c131d;
+  font-weight: bold;
+  cursor: pointer;
 }
 
 .addItems {

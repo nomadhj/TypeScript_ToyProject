@@ -9,14 +9,14 @@
     <script src="dist/app.js" defer></script>
   </head>
   <body>
-    <template id="project-add">
+    <template id="projectAdd">
       <form class="addProjects">
-        <p>Add another list</p>
+        <p>Add project list</p>
         <input type="text" id="projectTitle" />
         <button type="submit">Add list</button>
       </form>
     </template>
-    <template id="project-list">
+    <template id="projectList">
       <section class="projects" draggable="true">
         <header class="projectHeader">
           <h2></h2>
@@ -24,13 +24,13 @@
         </header>
         <ul></ul>
         <form class="addItems">
-          <p>ADD a card</p>
+          <p>ADD a item</p>
           <input type="text" />
           <button type="submit">Add</button>
         </form>
       </section>
     </template>
-    <template id="project-item">
+    <template id="projectItem">
       <li class="projectItem" draggable="true"></li>
     </template>
     <div id="app">
